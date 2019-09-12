@@ -7,6 +7,9 @@
 #include "GameFramework/Actor.h"
 #include "Public/DrawDebugHelpers.h"
 
+// OUT is used to mark out_Params
+#define OUT 
+
 // Sets default values for this component's properties
 UGrabber::UGrabber()
 {
@@ -25,7 +28,15 @@ void UGrabber::BeginPlay()
 
 	UE_LOG(LogTemp, Warning, TEXT("Grabber is Activated!")); 
 
-	
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	if (PhysicsHandle)
+	{
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Physics Handle not found on %s"), *GetOwner()->GetName());
+	}
 
 }
 
@@ -36,7 +47,7 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		PlayerViewPointLocation, PlayerViewPointRotation
+		OUT PlayerViewPointLocation, OUT PlayerViewPointRotation
 	);
 
 	LineTraceEnd = PlayerViewPointLocation + ( PlayerViewPointRotation.Vector() * Reach );
@@ -52,8 +63,19 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 		6
 	);
 
-	// UE_LOG(LogTemp, Warning, TEXT("Location: %s, Rotation: %s"), *PlayerViewPointLocation.ToString(), *PlayerViewPointRotation.ToString());
+	LineTraceParams = FCollisionQueryParams(FName(TEXT("")), false, GetOwner());
+	
+	bool bSomethingWasHit = GetWorld()->LineTraceSingleByObjectType(
+		OUT Hit,
+		PlayerViewPointLocation,
+		LineTraceEnd,
+		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
+		LineTraceParams
+	);
 
-
+	if (bSomethingWasHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("LineTrace Hit: %s"), *Hit.GetActor()->GetName())
+	}
 }
 

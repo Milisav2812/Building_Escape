@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Components/ActorComponent.h"
 #include "Grabber.generated.h"
 
@@ -30,4 +31,9 @@ private:
 	FRotator PlayerViewPointRotation;
 
 	FVector LineTraceEnd;
+
+	FHitResult Hit;
+	FCollisionQueryParams LineTraceParams;
+
+	UPhysicsHandleComponent* PhysicsHandle = nullptr;
 };
