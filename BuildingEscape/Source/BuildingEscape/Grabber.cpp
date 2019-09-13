@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Actor.h"
+#include "Components/PrimitiveComponent.h"
 #include "Public/DrawDebugHelpers.h"
 
 // OUT is used to mark out_Params
@@ -26,8 +27,27 @@ void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("Grabber is Activated!")); 
+	FindPhysicsHandleComponent();
+	FindPawnInputComponent();
+}
 
+void UGrabber::FindPawnInputComponent()
+{
+	PawnInputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
+	if (PawnInputComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Input Component FOUND"));
+		PawnInputComponent->BindAction("Grab", EInputEvent::IE_Pressed, this, &UGrabber::Grab);
+		PawnInputComponent->BindAction("Grab", EInputEvent::IE_Released, this, &UGrabber::Release);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Input Component not found on %s"), *GetOwner()->GetName());
+	}
+}
+
+void UGrabber::FindPhysicsHandleComponent()
+{
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 	if (PhysicsHandle)
 	{
@@ -37,34 +57,26 @@ void UGrabber::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Physics Handle not found on %s"), *GetOwner()->GetName());
 	}
-
 }
-
 
 // Called every frame
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
-		OUT PlayerViewPointLocation, OUT PlayerViewPointRotation
-	);
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		CalculateLineReach();
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+	}
+}
 
-	LineTraceEnd = PlayerViewPointLocation + ( PlayerViewPointRotation.Vector() * Reach );
-	
-	DrawDebugLine(
-		GetWorld(),
-		PlayerViewPointLocation,
-		LineTraceEnd,
-		FColor(255, 0, 0),
-		false,
-		0,
-		0,
-		6
-	);
+FHitResult UGrabber::GetFirstPhysicsBodyInReach()
+{
+	CalculateLineReach();
 
 	LineTraceParams = FCollisionQueryParams(FName(TEXT("")), false, GetOwner());
-	
+
 	bool bSomethingWasHit = GetWorld()->LineTraceSingleByObjectType(
 		OUT Hit,
 		PlayerViewPointLocation,
@@ -77,5 +89,41 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	{
 		UE_LOG(LogTemp, Warning, TEXT("LineTrace Hit: %s"), *Hit.GetActor()->GetName())
 	}
+
+	return Hit;
+}
+
+void UGrabber::Grab()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Grab PRESSED!"))
+	auto HitResult = GetFirstPhysicsBodyInReach();
+	UPrimitiveComponent* ComponentToGrab = HitResult.GetComponent();
+	AActor* HitActor = HitResult.GetActor();
+
+	if (HitActor)
+	{
+		PhysicsHandle->GrabComponent(
+			ComponentToGrab,
+			NAME_None, // Bone is used on non-Static meshes
+			ComponentToGrab->GetOwner()->GetActorLocation(),
+			true // Allow rotation
+		);
+	}
+}
+
+void UGrabber::Release()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Grab RELEASED!"))
+
+	PhysicsHandle->ReleaseComponent();
+}
+
+void UGrabber::CalculateLineReach()
+{
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation, OUT PlayerViewPointRotation
+	);
+
+	LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * Reach);
 }
 
