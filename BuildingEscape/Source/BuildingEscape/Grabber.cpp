@@ -94,7 +94,7 @@ void UGrabber::Grab()
 	UPrimitiveComponent* ComponentToGrab = HitResult.GetComponent();
 	AActor* HitActor = HitResult.GetActor();
 
-	if (HitActor)
+	if (HitActor != nullptr)
 	{
 		PhysicsHandle->GrabComponent(
 			ComponentToGrab,
@@ -103,6 +103,8 @@ void UGrabber::Grab()
 			true // Allow rotation
 		);
 	}
+		
+	
 }
 
 void UGrabber::Release()
