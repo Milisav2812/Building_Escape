@@ -21,8 +21,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	// Calculates the LineTraceEnd vector based on current Player ViewPoint Position
 	void CalculateLineReach();
 
+	// Returns an Actor that is at the end of our Reach if it is a PhysicsBody Object Type
 	FHitResult GetFirstPhysicsBodyInReach();
 	
 	// Called when the game starts
@@ -33,11 +35,10 @@ public:
 
 private:
 	float Reach = 100;
+
 	FVector PlayerViewPointLocation;
 	FRotator PlayerViewPointRotation;
-
 	FVector LineTraceEnd;
-
 	FHitResult Hit;
 	FCollisionQueryParams LineTraceParams;
 

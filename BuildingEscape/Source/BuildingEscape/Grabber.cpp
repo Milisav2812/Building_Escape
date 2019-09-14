@@ -17,8 +17,6 @@ UGrabber::UGrabber()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
 
@@ -36,7 +34,7 @@ void UGrabber::FindPawnInputComponent()
 	PawnInputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (PawnInputComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Input Component FOUND"));
+		/// Binding Grab and Release to our Input Component
 		PawnInputComponent->BindAction("Grab", EInputEvent::IE_Pressed, this, &UGrabber::Grab);
 		PawnInputComponent->BindAction("Grab", EInputEvent::IE_Released, this, &UGrabber::Release);
 	}
@@ -49,11 +47,7 @@ void UGrabber::FindPawnInputComponent()
 void UGrabber::FindPhysicsHandleComponent()
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
-	if (PhysicsHandle)
-	{
-
-	}
-	else
+	if (!PhysicsHandle)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Physics Handle not found on %s"), *GetOwner()->GetName());
 	}
@@ -95,8 +89,8 @@ FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 
 void UGrabber::Grab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab PRESSED!"))
 	auto HitResult = GetFirstPhysicsBodyInReach();
+
 	UPrimitiveComponent* ComponentToGrab = HitResult.GetComponent();
 	AActor* HitActor = HitResult.GetActor();
 
@@ -113,8 +107,6 @@ void UGrabber::Grab()
 
 void UGrabber::Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab RELEASED!"))
-
 	PhysicsHandle->ReleaseComponent();
 }
 
