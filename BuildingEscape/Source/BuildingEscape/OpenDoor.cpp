@@ -23,6 +23,10 @@ void UOpenDoor::BeginPlay()
 	Super::BeginPlay();
 
 	Owner = GetOwner();
+	if (!PressurePlate)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PressurePlate NOT Defined!"))
+	}
 }
 
 // Called every frame
@@ -30,6 +34,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if (!PressurePlate) { return; }
 	if (GetTotalMassOfActorsOnPlate() > 30.f)
 	{
 		OpenDoor();
